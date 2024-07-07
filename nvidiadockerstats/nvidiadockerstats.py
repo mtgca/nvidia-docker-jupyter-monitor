@@ -75,7 +75,7 @@ def main():
                                   outputfmt = {'gpu_uuid':lambda s: s.lstrip()},
                                   skipheader = True)
     unitprocstats = commandtodictdict(['nvidia-smi','--format=csv'],
-                                      ['pid','process_name','gpu_uuid','used_memory'],
+                                      ['pid','process_name','gpu_uuid','used_gpu_memory'],
                                       keycols = ['pid','gpu_uuid'],
                                       queryargfmt = "--query-compute-apps={0}",
                                       outputfmt = {'gpu_uuid':lambda s: s.lstrip()},
@@ -95,7 +95,7 @@ def main():
  					       ('CPUPerc',8)])
     optdisplaycols = collections.OrderedDict([('pid',7),
                                               ('gpu_uuid',8),
-                                              ('used_memory',12),
+                                              ('used_gpu_memory',12),
                                               ('used_gpu',9)])
     displaycols = collections.OrderedDict(list(basedisplaycols.items())+
                                           list(optdisplaycols.items()))
