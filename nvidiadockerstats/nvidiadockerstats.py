@@ -91,7 +91,7 @@ def main():
     basedisplaycols = collections.OrderedDict([('Name',40),
                                                ('Image',18),
 					       ('Container',12),
-       					       ('MemUsage',24),
+       					       ('MemUsage',20),
  					       ('CPUPerc',8)])
     optdisplaycols = collections.OrderedDict([('pid',7),
                                               ('gpu_uuid',8),
@@ -123,7 +123,7 @@ def main():
             basedisplaystr = basedisplayfmt.format(Container=container,**dockerinfo)
             print(basedisplaystr)
             for (pid,gpu_uuid),stats in containerunitstats.items():
-                print(optdisplayfmt.rjust(196).format(pid=pid,gpu_uuid=gpu_uuid,**stats,**unitstats[gpu_uuid]))
+                print(optdisplayfmt.rjust(191).format(pid=pid,gpu_uuid=gpu_uuid,**stats,**unitstats[gpu_uuid]))
     if not someunitsactive:
         print("\n\t\t no gpu units being used by docker containers ")
 
