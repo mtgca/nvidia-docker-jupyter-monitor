@@ -4,6 +4,36 @@ import subprocess
 import io
 import csv
 import collections
+import requests
+
+def get_jupyter_sessions(server_url, token):
+    """
+    Retrieve  the list of active Jupyter sessions.
+    
+    This function sends a request to the Jupyter server API to retrieve the list of active sessions.
+    It prints the number of active sessions and details of each session, and returns the list of sessions.
+ß
+    Parameters:
+    server_url (str): The URL of the Jupyter server. Example: 'http://127.0.0.1:9000'
+    token (str): The authentication token for accessing the Jupyter server API. Example: '030b6044cf39b694492a41dc3315a0725171a1c0d9354598'
+
+    Returns:
+    list: A list of dictionaries, each containing details of an active Jupyter session.
+    """
+    
+    # Send a GET request to the Jupyter server to retrieve the list of sessions
+    session_list = requests.get(f"{server_url}/api/sessions", headers={"Authorization": f"token {token}"}).json()
+    
+    # Print the number of active sessions
+    print("number of sessions: ", len(session_list))
+    
+    # Print details of each session
+    for session in session_list:
+        print(session)
+    
+    # Return the list of sessions
+    return session_list
+
 
 def commandexists(shellcommand):
     status,output = subprocess.getstatusoutput(shellcommand)
@@ -55,6 +85,7 @@ def renamekeys(d,names):
     return d
 
 def main():
+    
     #get results of all commands without container arguments
     dockerps = commandtodictdict(['docker','ps','--format'],
                                  ['ID','Image','Ports'],
@@ -95,7 +126,7 @@ def main():
  					       ('CPUPerc',8)])
     optdisplaycols = collections.OrderedDict([('pid',7),
                                               ('gpu_uuid',8),
-                                              ('used_gpu_memory',12),
+                                              ('used_gpu_memory',12),#total usage,it is not per 
                                               ('used_gpu',9)])
     displaycols = collections.OrderedDict(list(basedisplaycols.items())+
                                           list(optdisplaycols.items()))
