@@ -1,9 +1,12 @@
 ## About
-A Python 3 based command line tool for determining a docker container associated processes gpu utilization by joining information across 'nvidia-smi *' and 'docker *' commands.
+
+Using the AllenCellModeling/nvidia-docker-stats repository as a base
+a program that obtains the Jupyter Notebook token associated with the Docker containers that use the Colab image and in turn allows to determine the GPU utilization of the processes associated with the Docker containers by joining the information through the commands 'nvidia-smi _' and 'docker _'.
 
 ## Usage
 
 ### Case 1
+
 Clone into the python path and run module as script via:
 
 ```
@@ -11,6 +14,7 @@ $ python3 -m nvidiadockerstats.nvidiadockerstats
 ```
 
 ### Case 2
+
 Clone anywhere on network home, link, and run directly:
 
 ```
@@ -20,6 +24,7 @@ $ nvidiadockerstats
 ```
 
 ### Example output
+
 ```
 Container       Image                   pid     gpu_uuid        used_memory     used_gpu
 9afcd2624a5b    shiva/keras
@@ -33,4 +38,5 @@ Container       Image                   pid     gpu_uuid        used_memory     
 ```
 
 ## License
+
 GPL 3
