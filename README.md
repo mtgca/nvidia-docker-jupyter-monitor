@@ -50,3 +50,4 @@ Container       Image                   pid     gpu_uuid        used_memory     
 This project is licensed under the GNU General Public License, version 3.(GPL 3) See the [LICENSE](./LICENSE) file for details.
 This project is based on the work done in [AllenCellModeling/nvidia-docker-stats](https://github.com/AllenCellModeling/nvidia-docker-stats.git).
 Thanks to the original authors.
+Modifications and maintenance by [mtgca](https://github.com/mtgca), [Pichuelectrico](https://github.com/Pichuelectrico), and [agualat](https://github.com/agualat).
