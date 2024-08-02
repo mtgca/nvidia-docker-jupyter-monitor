@@ -47,4 +47,6 @@ Container       Image                   pid     gpu_uuid        used_memory     
 
 ## License
 
-GPL 3
+This project is licensed under the GNU General Public License, version 3.(GPL 3) See the [LICENSE](./LICENSE) file for details.
+This project is based on the work done in [AllenCellModeling/nvidia-docker-stats](https://github.com/AllenCellModeling/nvidia-docker-stats.git).
+Thanks to the original authors.
