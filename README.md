@@ -1,9 +1,17 @@
+## nvidia-docker-jupyter-monitor
+
+This project is a modification of [AllenCellModeling/nvidia-docker-stats](https://github.com/AllenCellModeling/nvidia-docker-stats.git). We are using this as a base to monitor system resource usage, including GPU processes, and have added the retrieval of Jupyter Notebook tokens associated with Docker containers using the Colab image.
+
 ## About
 
-Using the AllenCellModeling/nvidia-docker-stats repository as a base
-a program that obtains the Jupyter Notebook token associated with the Docker containers that use the Colab image and in turn allows to determine the GPU utilization of the processes associated with the Docker containers by joining the information through the commands 'nvidia-smi _' and 'docker _'.
+A Python 3 based command line tool for determining a docker container associated processes gpu utilization by joining information across 'nvidia-smi _' and 'docker _' commands.
 
-## Usage
+## New Features
+
+- **Jupyter Notebook Tokens**: Retrieving Jupyter Notebook tokens associated with Docker containers using the Colab image.
+- (Comming Soon..)**Resource Monitoring**: Monitoring system resource usage by Docker containers.
+
+## Usage of AllenCellModeling version
 
 ### Case 1
 
@@ -39,4 +47,7 @@ Container       Image                   pid     gpu_uuid        used_memory     
 
 ## License
 
-GPL 3
+This project is licensed under the GNU General Public License, version 3.(GPL 3) See the [LICENSE](./LICENSE) file for details.
+This project is based on the work done in [AllenCellModeling/nvidia-docker-stats](https://github.com/AllenCellModeling/nvidia-docker-stats.git).
+Thanks to the original authors.
+Modifications and maintenance by [mtgca](https://github.com/mtgca), [Pichuelectrico](https://github.com/Pichuelectrico), and [agualat](https://github.com/agualat).
