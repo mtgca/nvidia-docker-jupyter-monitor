@@ -113,7 +113,6 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     blockioupdate = {
                         "Block I/O": {"text": {"content": f"{item['block_io']}"}}
                     }
-                    pidsupdate = {"PIDs": {"number": f"{item['pids']}"}}
                     update_page(page_id, portupdate)
                     update_page(page_id, tokenupdate)
                     update_page(page_id, cpuupdate)
@@ -121,7 +120,6 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     update_page(page_id, mempercupdate)
                     update_page(page_id, netioupdate)
                     update_page(page_id, blockioupdate)
-                    update_page(page_id, pidsupdate)
                     return True
             else:
                 return False
