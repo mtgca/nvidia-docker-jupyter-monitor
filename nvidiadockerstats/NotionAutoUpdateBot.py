@@ -61,12 +61,14 @@ def Info_Database(Notion_Database_ID, Selected):
     for page in pages:
         page_id = page["id"]
         props = page["properties"]
+        ContainerId = props["Container ID"]["rich_text"][0]["text"]["content"]
         NameC = props["Docker container"]["title"][0]["text"]["content"]
         port = props["Port Number"]["number"]
         tokenj = props["Token"]["rich_text"][0]["text"]["content"]
         Info_db.append(
             {
                 "page_id": page_id,
+                "Container_ID": ContainerId,
                 "Name_Container": NameC,
                 "Number": port,
                 "Token_J": tokenj,
@@ -84,11 +86,11 @@ def update_page(page_id: str, data: dict):
     return response
 
 
-def check_for_tokenUpdates(page_id, file, name, token, port):
+def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
     with open(file, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data:
-            if item["name"] == name:
+            if item["Container_ID"] == ContainerId:
                 if item["token"] == token or item["port"] == port:
                     return False
                 else:
@@ -98,8 +100,28 @@ def check_for_tokenUpdates(page_id, file, name, token, port):
                             "rich_text": [{"text": {"content": f"{item['token'][0]}"}}]
                         }
                     }
+                    cpuupdate = {"CPU Usage": {"number": f"{item['cpu_usage']}"}}
+                    memupdate = {
+                        "Memory Usage": {"text": {"content": f"{item['mem_usage']}"}}
+                    }
+                    mempercupdate = {
+                        "Memory Usage Percent": {"number": f"{item['mem_perc']}"}
+                    }
+                    netioupdate = {
+                        "Network I/O": {"text": {"content": f"{item['net_io']}"}}
+                    }
+                    blockioupdate = {
+                        "Block I/O": {"text": {"content": f"{item['block_io']}"}}
+                    }
+                    pidsupdate = {"PIDs": {"number": f"{item['pids']}"}}
                     update_page(page_id, portupdate)
                     update_page(page_id, tokenupdate)
+                    update_page(page_id, cpuupdate)
+                    update_page(page_id, memupdate)
+                    update_page(page_id, mempercupdate)
+                    update_page(page_id, netioupdate)
+                    update_page(page_id, blockioupdate)
+                    update_page(page_id, pidsupdate)
                     return True
             else:
                 return False
@@ -108,14 +130,14 @@ def check_for_tokenUpdates(page_id, file, name, token, port):
 def main():
     Datalist = Info_Database(Notion_Database_ID, "Notion")
     for Data in Datalist:
-        name = Data["Name_Container"]
+        ContainerID = Data["Container_ID"]
         port = Data["Number"]
         token = Data["Token_J"]
         page_id = Data["page_id"]
-        if check_for_tokenUpdates(page_id, file, name, token, port):
-            print(f"Container {name} updated")
+        if check_for_tokenUpdates(page_id, file, ContainerID, token, port):
+            print(f"Container {ContainerID} updated")
         else:
-            print(f"Container {name} no need of update")
+            print(f"Container {ContainerID} no need of update")
     os.remove(file)
 
 
