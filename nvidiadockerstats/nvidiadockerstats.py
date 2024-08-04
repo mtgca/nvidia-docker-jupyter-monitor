@@ -4,8 +4,6 @@ import subprocess
 import io
 import csv
 import collections
-import json
-import re
 import requests
 
 
@@ -53,6 +51,10 @@ def command(args):
 
 
 def csvtodictdict(csvdata, colnames, keycols, fmtcols={}):
+    """
+    Returns a dict of dicts from csv file with specified column names and primary key column
+    accepts and optional element formatting per column as a dictionary of format functions
+    """
     fmtcols = collections.defaultdict(lambda: lambda x: x, **fmtcols)
     d = {}
     rows = csv.reader(csvdata)
@@ -90,160 +92,34 @@ def commandtodictdict(
 
 
 def renamekeys(d, names):
+    """
+    updates key names in d based on dict of old/new name pairs
+    returning resulting updated dict
+    """
     for oldname, newname in names.items():
         d[newname] = d.pop(oldname)
     return d
 
 
-def get_container_names(prefix):
-    try:
-        result = subprocess.run(
-            ["docker", "ps", "--filter", f"name={prefix}", "--format", "{{.Names}}"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return result.stdout.splitlines()
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting container names: {e}")
-        return []
-
-
-def get_container_id(container_name):
-    try:
-        result = subprocess.run(
-            [
-                "docker",
-                "ps",
-                "--filter",
-                f"name={container_name}",
-                "--format",
-                "{{.ID}}",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting container ID for {container_name}: {e}")
-        return None
-
-
-def get_jupyter_token(container_name):
-    try:
-        result = subprocess.run(
-            ["docker", "exec", container_name, "jupyter", "notebook", "list"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        token_pattern = re.compile(r"token=([a-f0-9]+)")
-        for line in result.stdout.splitlines():
-            if "http" in line:
-                match = token_pattern.search(line)
-                if match:
-                    return match.group(1)  # Devolver solo el token sin corchetes
-        return None
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting Jupyter token from {container_name}: {e}")
-        return None
-
-
-def get_container_ports(container_name):
-    try:
-        result = subprocess.run(
-            ["docker", "port", container_name],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        port_mapping = result.stdout.strip()
-
-        # Extracción del puerto
-        ports = []
-        for line in port_mapping.splitlines():
-            parts = line.split(":")
-            if len(parts) == 2:
-                ports.append(parts[1])
-
-        # Tomar el primer puerto si hay múltiples
-        if ports:
-            return ports[0]
-        else:
-            return "Unknown port"
-    except subprocess.CalledProcessError as e:
-        print(f"Error retrieving ports from container {container_name}: {e}")
-        return "Unknown port"
-
-
-def get_container_stats(container_name):
-    try:
-        result = subprocess.run(
-            [
-                "docker",
-                "stats",
-                "--no-stream",
-                "--format",
-                "{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.BlockIO}},{{.PIDs}}",
-                container_name,
-            ],
-            capture_output=True,
-            text=True,
-        )
-        stats = result.stdout.strip().split(",")
-        if len(stats) == 6:
-            cpu_usage = stats[0]
-            mem_usage = stats[1]
-            mem_perc = stats[2]
-            net_io = stats[3]
-            block_io = stats[4]
-            pids = stats[5]
-            return cpu_usage, mem_usage, mem_perc, net_io, block_io, pids
-        else:
-            return (
-                "Unknown CPU",
-                "Unknown MEM USAGE / LIMIT",
-                "Unknown MEM %",
-                "Unknown NET I/O",
-                "Unknown BLOCK I/O",
-                "Unknown PIDs",
-            )
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting stats for container {container_name}: {e}")
-        return (
-            "Unknown CPU",
-            "Unknown MEM USAGE / LIMIT",
-            "Unknown MEM %",
-            "Unknown NET I/O",
-            "Unknown BLOCK I/O",
-            "Unknown PIDs",
-        )
-
-
-def get_process_name(pid):
-    try:
-        result = subprocess.run(
-            ["ps", "-p", pid, "-o", "comm="], capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        print(f"Error retrieving process name for PID {pid}: {e}")
-        return "Unknown"
-
-
-def map_pids_to_processes(pids):
-    pid_process_mapping = {}
-    for pid in pids:
-        pid_process_mapping[pid] = get_process_name(pid)
-    return pid_process_mapping
-
-
 def main():
-    prefix = ""
-    containers = get_container_names(prefix)
-    data = []
 
+    # get results of all commands without container arguments
+    dockerps = commandtodictdict(
+        ["docker", "ps", "--format"],
+        ["ID", "Image", "Ports"],
+        keycols="ID",
+        queryargfmt="'{0}'",
+        colargfmt="{{{{.{0}}}}}",
+        outputfmt={"ID": lambda s: s[1:]},
+    )
+    dockerstats = commandtodictdict(
+        ["docker", "stats", "--no-stream", "--format"],
+        ["Container", "MemUsage", "CPUPerc", "Name"],
+        keycols="Container",
+        queryargfmt="'{0}'",
+        colargfmt="{{{{.{0}}}}}",
+        outputfmt={"Container": lambda s: s[1:]},
+    )
     unitstats = commandtodictdict(
         ["nvidia-smi", "--format=csv"],
         ["gpu_uuid", "utilization.gpu", "utilization.memory"],
@@ -261,6 +137,7 @@ def main():
         skipheader=True,
     )
 
+    # map gpu_uuids to short ids in unit info rename columns
     shortunitids = {
         gpu_uuid: "{0}".format(shortid)
         for gpu_uuid, shortid in zip(unitstats.keys(), range(len(unitstats)))
@@ -275,16 +152,52 @@ def main():
         for (pid, gpu_uuid), stats in unitprocstats.items()
     }
 
-    for container in containers:
-        container_id = get_container_id(container)
-        token = get_jupyter_token(container)
-        port = get_container_ports(container)
-        cpu_usage, mem_usage, mem_perc, net_io, block_io, pids = get_container_stats(
-            container
-        )
+    # display fmt data
+    basedisplaycols = collections.OrderedDict(
+        [
+            ("Name", 40),
+            ("Image", 18),
+            ("Container", 12),
+            ("MemUsage", 20),
+            ("CPUPerc", 8),
+        ]
+    )
+    optdisplaycols = collections.OrderedDict(
+        [
+            ("pid", 7),
+            ("gpu_uuid", 8),
+            ("used_gpu_memory", 12),  # total usage,it is not per
+            ("used_gpu", 9),
+        ]
+    )
+    displaycols = collections.OrderedDict(
+        list(basedisplaycols.items()) + list(optdisplaycols.items())
+    )
 
-        pids = command(["docker", "top", container, "-eo", "pid"]).split("\n")[1:-1]
-        pid_to_process_mapping = map_pids_to_processes(pids)
+    # display fmt strings
+    basedisplayfmt = "\t".join(
+        ["{{{0}:{1}.{1}}}".format(col, width) for col, width in basedisplaycols.items()]
+    )
+    optdisplayfmt = "\t".join(
+        ["{{{0}:{1}.{1}}}".format(col, width) for col, width in optdisplaycols.items()]
+    )
+    displayfmt = "\t".join([basedisplayfmt, optdisplayfmt])
+
+    # print rows of relevant container processes
+    # (everything below a bit janky in terms of argument expectations and generalization)
+    dockerall = {
+        container: {**dockerps[container], **dockerstats[container]}
+        for container in dockerstats.keys()
+    }
+    someunitsactive = False
+    print(displayfmt.format(**{col: col for col in displaycols.keys()}))
+    for container, dockerinfo in dockerall.items():
+        # very particular incantation needed here for top options to function correctly:
+        # https://www.projectatomic.io/blog/2016/01/understanding-docker-top-and-ps/
+        pids = command(["docker", "top", container, "-eo", "pid"]).split("\n")[
+            1:-1
+        ]  # obviously could be a bit brittle
+
         containerunitstatslist = [
             ((proc, unit), stats)
             for (proc, unit), stats in sorted(unitprocstats.items())
@@ -293,45 +206,21 @@ def main():
         containerunitstats = collections.OrderedDict(containerunitstatslist)
 
         if containerunitstats:
-            container_data = {
-                "id": container_id,
-                "name": container,
-                "port": port,
-                "token": token,  # Almacenar el token como una cadena
-                "cpu_usage": cpu_usage,
-                "mem_usage": mem_usage,
-                "mem_perc": mem_perc,
-                "net_io": net_io,
-                "block_io": block_io,
-                "pids": pids,
-                "pid_to_process_mapping": pid_to_process_mapping,  # Mapeo PID a nombre de proceso
-                "gpu_units": [
-                    {**stats, **unitstats[unit], "pid": pid, "gpu_unit_number": unit}
-                    for (pid, unit), stats in containerunitstats.items()
-                ],
-            }
-            data.append(container_data)
-        else:
-            container_data = {
-                "id": container_id,
-                "name": container,
-                "port": port,
-                "token": token,  # Almacenar el token como una cadena
-                "cpu_usage": cpu_usage,
-                "mem_usage": mem_usage,
-                "mem_perc": mem_perc,
-                "net_io": net_io,
-                "block_io": block_io,
-                "pids": pids,
-                "pid_to_process_mapping": pid_to_process_mapping,
-            }
-            data.append(container_data)
-
-    with open("tokens_de_jupyter.json", "w") as f:
-        json.dump(data, f, indent=4)
+            someunitsactive = True
+            basedisplaystr = basedisplayfmt.format(Container=container, **dockerinfo)
+            print(basedisplaystr)
+            for (pid, gpu_uuid), stats in containerunitstats.items():
+                print(
+                    optdisplayfmt.rjust(191).format(
+                        pid=pid, gpu_uuid=gpu_uuid, **stats, **unitstats[gpu_uuid]
+                    )
+                )
+    if not someunitsactive:
+        print("\n\t\t no gpu units being used by docker containers ")
 
 
 if __name__ == "__main__":
+    # check for existence of docker and nvidia-smi commands
     if commandexists("docker") and commandexists("nvidia-smi"):
         main()
     else:
