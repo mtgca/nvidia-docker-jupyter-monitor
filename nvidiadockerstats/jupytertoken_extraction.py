@@ -17,71 +17,6 @@ def get_container_names(prefix):
         return []
 
 
-def get_container_stats(container_name):
-    try:
-        result = subprocess.run(
-            [
-                "docker",
-                "stats",
-                "--no-stream",
-                "--format",
-                "{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.BlockIO}},{{.PIDs}}",
-                container_name,
-            ],
-            capture_output=True,
-            text=True,
-        )
-        stats = result.stdout.strip().split(",")
-        if len(stats) == 6:
-            cpu_usage = stats[0]
-            mem_usage = stats[1]
-            mem_perc = stats[2]
-            net_io = stats[3]
-            block_io = stats[4]
-            pids = stats[5]
-            return cpu_usage, mem_usage, mem_perc, net_io, block_io, pids
-        else:
-            return (
-                "Unknown CPU",
-                "Unknown MEM USAGE / LIMIT",
-                "Unknown MEM %",
-                "Unknown NET I/O",
-                "Unknown BLOCK I/O",
-                "Unknown PIDs",
-            )
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting stats for container {container_name}: {e}")
-        return (
-            "Unknown CPU",
-            "Unknown MEM USAGE / LIMIT",
-            "Unknown MEM %",
-            "Unknown NET I/O",
-            "Unknown BLOCK I/O",
-            "Unknown PIDs",
-        )
-
-
-def get_container_id(container_name):
-    try:
-        result = subprocess.run(
-            [
-                "docker",
-                "ps",
-                "--filter",
-                f"name={container_name}",
-                "--format",
-                "{{.ID}}",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting container ID for {container_name}: {e}")
-        return None
-
-
 def get_jupyter_tokens(container_name):
     try:
         result = subprocess.run(
@@ -132,24 +67,9 @@ def main():
     containers = get_container_names(prefix)
     data = []
     for container in containers:
-        container_id = get_container_id(container)
         tokens = get_jupyter_tokens(container)
         port = get_container_ports(container)
-        cpu_usage, mem_usage, mem_perc, net_io, block_io, pids = get_container_stats(
-            container
-        )
-        container_data = {
-            "Container_ID": container_id,
-            "name": container,
-            "port": port,
-            "token": tokens,
-            "cpu_usage": cpu_usage,
-            "mem_usage": mem_usage,
-            "mem_perc": mem_perc,
-            "net_io": net_io,
-            "block_io": block_io,
-            "pids": pids,
-        }
+        container_data = {"name": container, "port": port, "token": tokens}
         data.append(container_data)
     with open("tokens_de_jupyter.json", "w") as f:
         json.dump(data, f, indent=4)
