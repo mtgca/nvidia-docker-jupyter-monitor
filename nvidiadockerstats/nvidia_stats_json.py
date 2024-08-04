@@ -316,7 +316,7 @@ def main():
                 "id": container_id,
                 "name": container,
                 "port": port,
-                "token": token,  # Almacenar el token como una cadena
+                "token": token,
                 "cpu_usage": cpu_usage,
                 "mem_usage": mem_usage,
                 "mem_perc": mem_perc,
