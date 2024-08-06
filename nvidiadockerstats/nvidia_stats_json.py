@@ -282,7 +282,11 @@ def main():
         cpu_usage, mem_usage, mem_perc, net_io, block_io, pids = get_container_stats(
             container
         )
-        jupyter_session = get_jupyter_sessions(f'http://127.0.0.1:{port}', token)
+        try:
+            jupyter_session = get_jupyter_sessions(f"http://127.0.0.1:{port}", token)
+        except Exception as e:
+            print(f"Error getting Jupyter sessions for container {container}: {e}")
+            jupyter_session = []
         pids = command(["docker", "top", container, "-eo", "pid"]).split("\n")[1:-1]
         pid_to_process_mapping = map_pids_to_processes(pids)
         containerunitstatslist = [
