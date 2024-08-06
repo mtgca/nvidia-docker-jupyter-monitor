@@ -282,7 +282,7 @@ def main():
         cpu_usage, mem_usage, mem_perc, net_io, block_io, pids = get_container_stats(
             container
         )
-
+        jupyter_session = get_jupyter_sessions(f'http://127.0.0.1:{port}', token)
         pids = command(["docker", "top", container, "-eo", "pid"]).split("\n")[1:-1]
         pid_to_process_mapping = map_pids_to_processes(pids)
         containerunitstatslist = [
@@ -298,6 +298,7 @@ def main():
                 "name": container,
                 "port": port,
                 "token": token,  # Almacenar el token como una cadena
+                "Sessions": jupyter_session,
                 "cpu_usage": cpu_usage,
                 "mem_usage": mem_usage,
                 "mem_perc": mem_perc,
