@@ -49,7 +49,7 @@ def get_pages(Notion_Database_ID, num_pages=None):
         response = requests.post(url, headers=headers, json=payload)
         data = response.json()
         results.extend(data["results"])
-    os.remove("db.json")
+    # os.remove("db.json")
     return results
 
 
@@ -62,9 +62,15 @@ def Info_Database(Notion_Database_ID, Selected):
         page_id = page["id"]
         props = page["properties"]
         ContainerId = props["Container ID"]["rich_text"][0]["text"]["content"]
-        NameC = props["Docker container"]["title"][0]["text"]["content"]
+        try:
+            NameC = props["Docker container"]["title"][0]["text"]["content"]
+        except:
+            NameC = "No name"
         port = props["Port Number"]["number"]
-        tokenj = props["Token"]["rich_text"][0]["text"]["content"]
+        try:
+            tokenj = props["Token"]["rich_text"][0]["text"]["content"]
+        except:
+            tokenj = "No token"
         Info_db.append(
             {
                 "page_id": page_id,
@@ -90,16 +96,8 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
     with open(file, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data:
-            if item["Container_ID"] == ContainerId:
-                if item["token"] == token or item["port"] == port:
-                    return False
-                else:
-                    portupdate = {"Port Number": {"number": f"{item['port']}"}}
-                    tokenupdate = {
-                        "Token": {
-                            "rich_text": [{"text": {"content": f"{item['token'][0]}"}}]
-                        }
-                    }
+            if item["id"] == ContainerId:
+                if item["token"] == token and item["port"] == port:
                     cpuupdate = {"CPU Usage": {"number": f"{item['cpu_usage']}"}}
                     memupdate = {
                         "Memory Usage": {"text": {"content": f"{item['mem_usage']}"}}
@@ -113,6 +111,48 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     blockioupdate = {
                         "Block I/O": {"text": {"content": f"{item['block_io']}"}}
                     }
+                    update_page(page_id, cpuupdate)
+                    update_page(page_id, memupdate)
+                    update_page(page_id, mempercupdate)
+                    update_page(page_id, netioupdate)
+                    update_page(page_id, blockioupdate)
+                    return False
+                else:
+                    nameupdate = {
+                        "Docker container": {
+                            "title": [{"text": {"content": item["name"]}}]
+                        }
+                    }
+                    portupdate = {"Port Number": {"number": int(item["port"])}}
+                    tokenupdate = {
+                        "Token": {"rich_text": [{"text": {"content": item["token"]}}]}
+                    }
+                    cpuupdate = {
+                        "CPU Usage": {
+                            "number": float(item["cpu_usage"].replace("%", ""))
+                        }
+                    }
+                    memupdate = {
+                        "Memory Usage": {
+                            "rich_text": [{"text": {"content": item["mem_usage"]}}]
+                        }
+                    }
+                    mempercupdate = {
+                        "Memory Usage Percent": {
+                            "number": float(item["mem_perc"].replace("%", ""))
+                        }
+                    }
+                    netioupdate = {
+                        "Network I/O": {
+                            "rich_text": [{"text": {"content": item["net_io"]}}]
+                        }
+                    }
+                    blockioupdate = {
+                        "Block I/O": {
+                            "rich_text": [{"text": {"content": item["block_io"]}}]
+                        }
+                    }
+                    update_page(page_id, nameupdate)
                     update_page(page_id, portupdate)
                     update_page(page_id, tokenupdate)
                     update_page(page_id, cpuupdate)
@@ -122,7 +162,7 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     update_page(page_id, blockioupdate)
                     return True
             else:
-                return False
+                continue
 
 
 def main():
@@ -136,7 +176,7 @@ def main():
             print(f"Container {ContainerID} updated")
         else:
             print(f"Container {ContainerID} no need of update")
-    os.remove(file)
+    # os.remove(file)
 
 
 if __name__ == "__main__":
