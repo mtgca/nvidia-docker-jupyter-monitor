@@ -7,7 +7,7 @@ import os
 from notion_client import Client
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+load_dotenv("./nvidiadockerstats/NotionDocker/.env")
 Notion_Token: str = os.getenv("Notion_Token")
 Notion_Database_ID: str = os.getenv("Database_ID")
 file = "tokens_de_jupyter.json"
@@ -49,7 +49,7 @@ def get_pages(Notion_Database_ID, num_pages=None):
         response = requests.post(url, headers=headers, json=payload)
         data = response.json()
         results.extend(data["results"])
-    # os.remove("db.json")
+    os.remove("db.json")
     return results
 
 
@@ -116,7 +116,7 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     update_page(page_id, mempercupdate)
                     update_page(page_id, netioupdate)
                     update_page(page_id, blockioupdate)
-                    return False
+                    return True
                 else:
                     nameupdate = {
                         "Docker container": {
@@ -163,6 +163,7 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     return True
             else:
                 continue
+    return False
 
 
 def main():
@@ -176,7 +177,7 @@ def main():
             print(f"Container {ContainerID} updated")
         else:
             print(f"Container {ContainerID} no need of update")
-    # os.remove(file)
+    os.remove(file)
 
 
 if __name__ == "__main__":

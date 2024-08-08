@@ -2,8 +2,8 @@
 
 while true; 
 do
-    python nvidia_stats_json.py;
+    python jupytertoken_extraction.py;
     sleep 5;
     python NotionAutoUpdateBot.py;
-    sleep 300;
+    sleep 240;
 done 
