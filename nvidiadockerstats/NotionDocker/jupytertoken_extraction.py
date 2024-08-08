@@ -32,7 +32,7 @@ def get_container_stats(container_name):
             text=True,
         )
         stats = result.stdout.strip().split(",")
-        if len(stats) == 6:
+        if len(stats) == 5:
             cpu_usage = stats[0]
             mem_usage = stats[1]
             mem_perc = stats[2]
@@ -87,30 +87,36 @@ def get_jupyter_tokens(container_name):
             text=True,
             check=True,
         )
-        tokens = []
-        token_pattern = re.compile(r"token=([a-zA-Z0-9]+)")
+        token_pattern = re.compile(r"token=([a-f0-9]+)")
         for line in result.stdout.splitlines():
             if "http" in line:
                 match = token_pattern.search(line)
                 if match:
-                    tokens.append(match.group(1))
-        return tokens
+                    return match.group(1)  # Devolver solo el token sin corchetes
+        return None
     except subprocess.CalledProcessError as e:
-        print(f"Error getting Jupyter tokens from {container_name}: {e}")
-        return []
+        print(f"Error getting Jupyter token from {container_name}: {e}")
+        return None
 
 
 def get_container_ports(container_name):
     try:
         result = subprocess.run(
-            ["docker", "port", container_name], capture_output=True, text=True
+            ["docker", "port", container_name],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         port_mapping = result.stdout.strip()
+
+        # Extracción del puerto
         ports = []
         for line in port_mapping.splitlines():
             parts = line.split(":")
             if len(parts) == 2:
                 ports.append(parts[1])
+
+        # Tomar el primer puerto si hay múltiples
         if ports:
             return ports[0]
         else:
@@ -132,11 +138,11 @@ def main():
         container_id = get_container_id(container)
         tokens = get_jupyter_tokens(container)
         port = get_container_ports(container)
-        cpu_usage, mem_usage, mem_perc, net_io, block_io, pids = get_container_stats(
+        cpu_usage, mem_usage, mem_perc, net_io, block_io = get_container_stats(
             container
         )
         container_data = {
-            "Container_ID": container_id,
+            "id": container_id,
             "name": container,
             "port": port,
             "token": tokens,

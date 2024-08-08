@@ -9,7 +9,47 @@ A Python 3 based command line tool for determining a docker container associated
 ## New Features
 
 - **Jupyter Notebook Tokens**: Retrieving Jupyter Notebook tokens associated with Docker containers using the Colab image.
+- **Dockerfile for a Notion monitoring automation** - Populate a Notion database with Docker statistics and Jupyter Notebook token information
 - (Comming Soon..)**Resource Monitoring**: Monitoring system resource usage by Docker containers.
+
+### Dockerfile Usage
+
+> [!IMPORTANT]
+>
+> - First, in Notion, prepare the database by following the format below for the properties: (Name | Type)
+>   - Container ID | Text
+>   - Docker container | Title
+>   - Jupyter Token | Formula (Formula:`"http://127.0.0.1:"+prop("Port Number")+"/?token="+prop("Token")`)
+>   - Port Number | Number (Number format: Number)
+>   - Token | Text
+>   - CPU Usage | Number (Number format: Percent)
+>   - Memory Usage | Text
+>   - Memory Usage Percent | Number (Number format: Percent)
+>   - Network I/O | Text
+>   - Block I/O | Text
+> - Now, in the database, add the Docker Container IDs of the Docker containers that you want to monitor in this database
+
+- Then, clone the repository
+  ```
+  git clone https://github.com/mtgca/nvidia-docker-jupyter-monitor.git
+  ```
+- Go to the path of the Dockerfile
+  ```
+  cd nvidia-docker-jupyter-monitor/nvidiadockerstats/NotionDocker/
+  ```
+- Create a `.env` file with the following information
+  ```
+  Notion_Token=Insert your Notion integration token
+  Database_ID=Insert your Notion database ID
+  ```
+- Build the Docker image
+  ```
+  docker build -t notiondocker .
+  ```
+- Run the container with access to the host's Docker, and Nvidia information
+  ```
+  docker run --gpus=all --pid=host -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv notiondocker
+  ```
 
 ## Usage of AllenCellModeling version
 
