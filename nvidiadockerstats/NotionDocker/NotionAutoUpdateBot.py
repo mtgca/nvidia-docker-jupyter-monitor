@@ -125,13 +125,21 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                         }
                     except:
                         cpuupdate = {"CPU Usage": {"number": 0}}
-                        memupdate = {"Memory Usage": {"rich_text": [{"text": {"content": "unknown"}}]}}}
+                        memupdate = {
+                            "Memory Usage": {
+                                "rich_text": [{"text": {"content": "unknown"}}]
+                            }
+                        }
                         mempercupdate = {"Memory Usage Percent": {"number": 0}}
                         netioupdate = {
-                            "Network I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                            "Network I/O": {
+                                "rich_text": [{"text": {"content": "unknown"}}]
+                            }
                         }
                         blockioupdate = {
-                            "Block I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                            "Block I/O": {
+                                "rich_text": [{"text": {"content": "unknown"}}]
+                            }
                         }
                     update_page(page_id, cpuupdate)
                     update_page(page_id, memupdate)
@@ -177,13 +185,21 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                         }
                     except:
                         cpuupdate = {"CPU Usage": {"number": 0}}
-                        memupdate = {"Memory Usage": {"rich_text": [{"text": {"content": "unknown"}}]}}}
+                        memupdate = {
+                            "Memory Usage": {
+                                "rich_text": [{"text": {"content": "unknown"}}]
+                            }
+                        }
                         mempercupdate = {"Memory Usage Percent": {"number": 0}}
                         netioupdate = {
-                            "Network I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                            "Network I/O": {
+                                "rich_text": [{"text": {"content": "unknown"}}]
+                            }
                         }
                         blockioupdate = {
-                            "Block I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                            "Block I/O": {
+                                "rich_text": [{"text": {"content": "unknown"}}]
+                            }
                         }
                     update_page(page_id, nameupdate)
                     update_page(page_id, portupdate)

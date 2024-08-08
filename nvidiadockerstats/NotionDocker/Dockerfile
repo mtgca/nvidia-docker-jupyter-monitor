@@ -4,7 +4,7 @@ FROM python:latest
 WORKDIR /code
 
 # Copy the requirements file and install the dependencies
-COPY ~/NVIDIA-DOCKER-JUPYTER-MONITOR/requirements /code/
+COPY ~/NVIDIA-DOCKER-JUPYTER-MONITOR/requirements.txt /code/
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # Install Docker CLI inside the container

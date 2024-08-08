@@ -44,11 +44,11 @@ A Python 3 based command line tool for determining a docker container associated
   ```
 - Build the Docker image
   ```
-  docker build -t NotionDocker .
+  docker build -t notiondocker .
   ```
 - Run the container with access to the host's Docker, and Nvidia information
   ```
-  docker run --gpus=all --pid=host -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv NotionDocker
+  docker run --gpus=all --pid=host -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv notiondocker
   ```
 
 ## Usage of AllenCellModeling version
