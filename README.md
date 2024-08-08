@@ -9,6 +9,7 @@ A Python 3 based command line tool for determining a docker container associated
 ## New Features
 
 - **Jupyter Notebook Tokens**: Retrieving Jupyter Notebook tokens associated with Docker containers using the Colab image.
+- **Docker File for a Notion Monitoring automatization**: Fills a Notion Database with the Docker stats and Jupyter Notebook tokens information
 - (Comming Soon..)**Resource Monitoring**: Monitoring system resource usage by Docker containers.
 
 ### Dockerfile Usage
@@ -20,6 +21,11 @@ A Python 3 based command line tool for determining a docker container associated
 - Go to the path of the Dockerfile
   ```
   cd nvidia-docker-jupyter-monitor/nvidiadockerstats/NotionDocker/
+  ```
+- Create a `.env` file with the following information
+  ```
+  Notion_Token=Insert your Notion integration token
+  Database_ID=Insert your Notion database ID
   ```
 - Build the Docker image
   ```
