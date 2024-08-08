@@ -11,6 +11,25 @@ A Python 3 based command line tool for determining a docker container associated
 - **Jupyter Notebook Tokens**: Retrieving Jupyter Notebook tokens associated with Docker containers using the Colab image.
 - (Comming Soon..)**Resource Monitoring**: Monitoring system resource usage by Docker containers.
 
+### Dockerfile Usage
+
+- Clone the repository
+  ```
+  git clone https://github.com/mtgca/nvidia-docker-jupyter-monitor.git
+  ```
+- Go to the path of the Dockerfile
+  ```
+  cd nvidia-docker-jupyter-monitor/nvidiadockerstats/NotionDocker/
+  ```
+- Build the Docker image
+  ```
+  docker build -t NotionDocker .
+  ```
+- Run the container with access to the host's Docker, and Nvidia information
+  ```
+  docker run --gpus=all --pid=host -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv NotionDocker
+  ```
+
 ## Usage of AllenCellModeling version
 
 ### Case 1
