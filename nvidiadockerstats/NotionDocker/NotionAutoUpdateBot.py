@@ -2,12 +2,11 @@ import requests
 from datetime import datetime, timezone, timedelta
 import json
 from pprint import pprint
-from pprint import pformat
 import os
 from notion_client import Client
 from dotenv import load_dotenv
 
-load_dotenv("./nvidiadockerstats/NotionDocker/.env")
+load_dotenv(".env")
 Notion_Token: str = os.getenv("Notion_Token")
 Notion_Database_ID: str = os.getenv("Database_ID")
 file = "tokens_de_jupyter.json"
@@ -98,19 +97,42 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
         for item in data:
             if item["id"] == ContainerId:
                 if item["token"] == token and item["port"] == port:
-                    cpuupdate = {"CPU Usage": {"number": f"{item['cpu_usage']}"}}
-                    memupdate = {
-                        "Memory Usage": {"text": {"content": f"{item['mem_usage']}"}}
-                    }
-                    mempercupdate = {
-                        "Memory Usage Percent": {"number": f"{item['mem_perc']}"}
-                    }
-                    netioupdate = {
-                        "Network I/O": {"text": {"content": f"{item['net_io']}"}}
-                    }
-                    blockioupdate = {
-                        "Block I/O": {"text": {"content": f"{item['block_io']}"}}
-                    }
+                    try:
+                        cpuupdate = {
+                            "CPU Usage": {
+                                "number": float(item["cpu_usage"].replace("%", ""))
+                            }
+                        }
+                        memupdate = {
+                            "Memory Usage": {
+                                "rich_text": [{"text": {"content": item["mem_usage"]}}]
+                            }
+                        }
+                        mempercupdate = {
+                            "Memory Usage Percent": {
+                                "number": float(item["mem_perc"].replace("%", ""))
+                            }
+                        }
+                        netioupdate = {
+                            "Network I/O": {
+                                "rich_text": [{"text": {"content": item["net_io"]}}]
+                            }
+                        }
+                        blockioupdate = {
+                            "Block I/O": {
+                                "rich_text": [{"text": {"content": item["block_io"]}}]
+                            }
+                        }
+                    except:
+                        cpuupdate = {"CPU Usage": {"number": 0}}
+                        memupdate = {"Memory Usage": {"rich_text": [{"text": {"content": "unknown"}}]}}}
+                        mempercupdate = {"Memory Usage Percent": {"number": 0}}
+                        netioupdate = {
+                            "Network I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                        }
+                        blockioupdate = {
+                            "Block I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                        }
                     update_page(page_id, cpuupdate)
                     update_page(page_id, memupdate)
                     update_page(page_id, mempercupdate)
@@ -127,31 +149,42 @@ def check_for_tokenUpdates(page_id, file, ContainerId, token, port):
                     tokenupdate = {
                         "Token": {"rich_text": [{"text": {"content": item["token"]}}]}
                     }
-                    cpuupdate = {
-                        "CPU Usage": {
-                            "number": float(item["cpu_usage"].replace("%", ""))
+                    try:
+                        cpuupdate = {
+                            "CPU Usage": {
+                                "number": float(item["cpu_usage"].replace("%", ""))
+                            }
                         }
-                    }
-                    memupdate = {
-                        "Memory Usage": {
-                            "rich_text": [{"text": {"content": item["mem_usage"]}}]
+                        memupdate = {
+                            "Memory Usage": {
+                                "rich_text": [{"text": {"content": item["mem_usage"]}}]
+                            }
                         }
-                    }
-                    mempercupdate = {
-                        "Memory Usage Percent": {
-                            "number": float(item["mem_perc"].replace("%", ""))
+                        mempercupdate = {
+                            "Memory Usage Percent": {
+                                "number": float(item["mem_perc"].replace("%", ""))
+                            }
                         }
-                    }
-                    netioupdate = {
-                        "Network I/O": {
-                            "rich_text": [{"text": {"content": item["net_io"]}}]
+                        netioupdate = {
+                            "Network I/O": {
+                                "rich_text": [{"text": {"content": item["net_io"]}}]
+                            }
                         }
-                    }
-                    blockioupdate = {
-                        "Block I/O": {
-                            "rich_text": [{"text": {"content": item["block_io"]}}]
+                        blockioupdate = {
+                            "Block I/O": {
+                                "rich_text": [{"text": {"content": item["block_io"]}}]
+                            }
                         }
-                    }
+                    except:
+                        cpuupdate = {"CPU Usage": {"number": 0}}
+                        memupdate = {"Memory Usage": {"rich_text": [{"text": {"content": "unknown"}}]}}}
+                        mempercupdate = {"Memory Usage Percent": {"number": 0}}
+                        netioupdate = {
+                            "Network I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                        }
+                        blockioupdate = {
+                            "Block I/O": {"rich_text": [{"text": {"content": "unknown"}}]}
+                        }
                     update_page(page_id, nameupdate)
                     update_page(page_id, portupdate)
                     update_page(page_id, tokenupdate)
