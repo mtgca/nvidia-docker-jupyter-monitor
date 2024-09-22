@@ -10,7 +10,8 @@ A Python 3 based command line tool for determining a docker container associated
 
 - **Jupyter Notebook Tokens**: Retrieving Jupyter Notebook tokens associated with Docker containers using the Colab image.
 - **Dockerfile for a Notion monitoring automation** - Populate a Notion database with Docker statistics and Jupyter Notebook token information
-- (Comming Soon..)**Resource Monitoring**: Monitoring system resource usage by Docker containers.
+- (On Progress..)**Per-container resource monitoring**: Monitoring system resource usage by Docker containers, such as container GPU usage, this was done by modifying the [nawafalageel/docker_container_gpu_exporter](https://github.com/nawafalageel/docker_container_gpu_exporter.git) repository,
+  which was a Docker Container GPU Exporter for Prometheus, from which the `p2g.sh` file and some of the program logic was used.
 
 ### Dockerfile Usage
 
@@ -27,6 +28,8 @@ A Python 3 based command line tool for determining a docker container associated
 >   - Memory Usage Percent | Number (Number format: Percent)
 >   - Network I/O | Text
 >   - Block I/O | Text
+>   - GPU Usage | Number
+>   - GPU Percent | Number
 > - Now, in the database, add the Docker Container IDs of the Docker containers that you want to monitor in this database
 
 - Then, clone the repository
@@ -49,6 +52,17 @@ A Python 3 based command line tool for determining a docker container associated
 - Run the container with access to the host's Docker, and Nvidia information
   ```
   docker run --gpus=all --pid=host -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv notiondocker
+  ```
+
+### Command Version
+
+- Install the package using pip:
+  ```
+  pip install -i https://test.pypi.org/simple/ dockergpustats
+  ```
+- Run the command:
+  ```
+  dockergpustats
   ```
 
 ## Usage of AllenCellModeling version

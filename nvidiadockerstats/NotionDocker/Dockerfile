@@ -14,10 +14,12 @@ RUN apt-get update && apt-get install -y docker.io
 COPY ./jupytertoken_extraction.py /code/
 COPY ./NotionAutoUpdateBot.py /code/
 COPY ./main.sh /code/
+COPY ./p2g.sh /code/
 COPY ./*.env /code/
 
 # Ensure the shell script has executable permissions
 RUN chmod +x /code/main.sh
+RUN chmod +x /code/p2g.sh
 
 # Set the default command to run the shell script
 CMD ["bash", "/code/main.sh"]
