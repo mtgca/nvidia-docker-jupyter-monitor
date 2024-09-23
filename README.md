@@ -51,7 +51,7 @@ A Python 3 based command line tool for determining a docker container associated
   ```
 - Run the container with access to the host's Docker, and Nvidia information
   ```
-  docker run --gpus=all --pid=host -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv notiondocker
+  docker run --gpus=all --pid=host --restart=always -d -v /var/run/docker.sock:/var/run/docker.sock --name dockerNv notiondocker
   ```
 
 ### Command Version
