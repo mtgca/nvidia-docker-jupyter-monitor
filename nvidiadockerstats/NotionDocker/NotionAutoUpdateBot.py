@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 Notion_Token: str = os.getenv("Notion_Token")
 Notion_Database_ID: str = os.getenv("Database_ID")
-file = "data.json"
+file = "tokens_de_jupyter.json"
 
 
 headers = {
