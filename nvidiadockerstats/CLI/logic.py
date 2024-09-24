@@ -2,6 +2,7 @@ import json
 import subprocess
 import re
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 
 def get_container_names(prefix):
@@ -34,29 +35,12 @@ def get_container_stats(container_name):
         )
         stats = result.stdout.strip().split(",")
         if len(stats) == 5:
-            cpu_usage = stats[0]
-            mem_usage = stats[1]
-            mem_perc = stats[2]
-            net_io = stats[3]
-            block_io = stats[4]
-            return cpu_usage, mem_usage, mem_perc, net_io, block_io
+            return stats
         else:
-            return (
-                "Unknown CPU",
-                "Unknown MEM USAGE / LIMIT",
-                "Unknown MEM %",
-                "Unknown NET I/O",
-                "Unknown BLOCK I/O",
-            )
+            return ["Unknown CPU", "Unknown MEM USAGE / LIMIT", "Unknown MEM %", "Unknown NET I/O", "Unknown BLOCK I/O"]
     except subprocess.CalledProcessError as e:
         print(f"Error getting stats for container {container_name}: {e}")
-        return (
-            "Unknown CPU",
-            "Unknown MEM USAGE / LIMIT",
-            "Unknown MEM %",
-            "Unknown NET I/O",
-            "Unknown BLOCK I/O",
-        )
+        return ["Unknown CPU", "Unknown MEM USAGE / LIMIT", "Unknown MEM %", "Unknown NET I/O", "Unknown BLOCK I/O"]
 
 
 def get_container_id(container_name):
@@ -93,7 +77,7 @@ def get_jupyter_tokens(container_name):
             if "http" in line:
                 match = token_pattern.search(line)
                 if match:
-                    return match.group(1)  # Devolver solo el token sin corchetes
+                    return match.group(1)
         return None
     except subprocess.CalledProcessError as e:
         print(f"Error getting Jupyter token from {container_name}: {e}")
@@ -116,7 +100,6 @@ def get_container_ports(container_name):
             if len(parts) == 2:
                 ports.append(parts[1])
 
-        # Tomar el primer puerto si hay múltiples
         if ports:
             return ports[0]
         else:
@@ -144,8 +127,6 @@ def get_jupyter_sessions(server_url, token):
         session_list = requests.get(
             f"{server_url}/api/sessions", headers={"Authorization": f"token {token}"}
         ).json()
-
-        # print("Number of active sessions:", len(session_list))
         return session_list
     except Exception as e:
         print(f"Error retrieving Jupyter sessions: {e}")
@@ -258,66 +239,80 @@ def parse_gpu_data(gpu_data, total_gpu_memory):
 
 
 def main():
-    prefix = "colab_"
+    prefix = "colab"  # Optional add here the Prefix of the container names to retrieve
     containers = get_container_names(prefix)
     total_gpu_memory = get_total_gpu_memory()
     gpu_data = parse_gpu_data(get_gpu_usage(), total_gpu_memory)
 
     data = []
-    for container in containers:
-        container_id = get_container_id(container)
-        tokens = get_jupyter_tokens(container)
-        port = get_container_ports(container)
-        cpu_usage, mem_usage, mem_perc, net_io, block_io = get_container_stats(
-            container
-        )
 
-        container_data = {
-            "container_id": container_id,
-            "container_name": container,
-            "port": port,
-            "token": tokens,
-            "cpu_usage": cpu_usage,
-            "mem_usage": mem_usage,
-            "mem_perc": mem_perc,
-            "net_io": net_io,
-            "block_io": block_io,
-            "jupyter_sessions": [],
-            "gpu_info": [],
-        }
+    # Usamos ThreadPoolExecutor para paralelizar las llamadas de stats, IDs, tokens, puertos
+    with ThreadPoolExecutor() as executor:
+        futures = []
+        for container in containers:
+            futures.append(
+                executor.submit(
+                    process_container, container, gpu_data, total_gpu_memory
+                )
+            )
 
-        if tokens:
-            server_url = f"http://127.0.0.1:{port}"
-            jupyter_sessions = get_jupyter_sessions(server_url, tokens)
-            for session in jupyter_sessions:
-                kernel_id = session["kernel"]["id"]
-                notebook_name = session["notebook"]["name"]
-                pid = get_pid_for_kernel(kernel_id)
-
-                session_data = {
-                    "notebook_name": notebook_name,
-                    "kernel_id": kernel_id,
-                    "pid": pid,
-                }
-
-                container_data["jupyter_sessions"].append(session_data)
-
-                # Asignar la GPU correspondiente al PID del kernel
-                for gpu_info in gpu_data:
-                    if gpu_info["docker_container_running_gpu_pid"] == pid:
-                        container_data["gpu_info"].append(gpu_info)
-
-        # Añadir la información de GPU aunque no haya notebooks mapeados
-        if not container_data["gpu_info"]:
-            for gpu_info in gpu_data:
-                if gpu_info["docker_container_name"] == container:
-                    container_data["gpu_info"].append(gpu_info)
-
-        data.append(container_data)
+        for future in futures:
+            container_data = future.result()
+            data.append(container_data)
 
     with open("data.json", "w") as f:
         json.dump(data, f, indent=4)
 
 
-if __name__ == "__main__":
+def process_container(container, gpu_data, total_gpu_memory):
+    container_id = get_container_id(container)
+    tokens = get_jupyter_tokens(container)
+    port = get_container_ports(container)
+    cpu_usage, mem_usage, mem_perc, net_io, block_io = get_container_stats(container)
+
+    container_data = {
+        "container_id": container_id,
+        "container_name": container,
+        "port": port,
+        "token": tokens,
+        "cpu_usage": cpu_usage,
+        "mem_usage": mem_usage,
+        "mem_perc": mem_perc,
+        "net_io": net_io,
+        "block_io": block_io,
+        "jupyter_sessions": [],
+        "gpu_info": [],
+    }
+
+    if tokens:
+        server_url = f"http://127.0.0.1:{port}"
+        jupyter_sessions = get_jupyter_sessions(server_url, tokens)
+        for session in jupyter_sessions:
+            kernel_id = session["kernel"]["id"]
+            notebook_name = session["notebook"]["name"]
+            pid = get_pid_for_kernel(kernel_id)
+
+            session_data = {
+                "notebook_name": notebook_name,
+                "kernel_id": kernel_id,
+                "pid": pid,
+            }
+
+            container_data["jupyter_sessions"].append(session_data)
+
+            # Asignar la GPU correspondiente al PID del kernel
+            for gpu_info in gpu_data:
+                if gpu_info["docker_container_running_gpu_pid"] == pid:
+                    container_data["gpu_info"].append(gpu_info)
+
+    # Añadir la información de GPU aunque no haya notebooks mapeados
+    if not container_data["gpu_info"]:
+        for gpu_info in gpu_data:
+            if gpu_info["docker_container_name"] == container:
+                container_data["gpu_info"].append(gpu_info)
+
+    return container_data
+
+
+if __name__ == "_main_":
     main()

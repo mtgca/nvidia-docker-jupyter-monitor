@@ -32,7 +32,6 @@ def display_stats(data):
     table = PrettyTable()
     table.field_names = [
         "Container Name",
-        "Container ID",
         "Port",
         "Jupyter Token",
         "CPU Usage",
@@ -50,7 +49,6 @@ def display_stats(data):
 
     for container in data:
         container_name = container["container_name"]
-        container_id = container["container_id"]
         port = container["port"]
         token = container["token"]
         cpu_usage = container["cpu_usage"]
@@ -65,9 +63,11 @@ def display_stats(data):
         # Si hay notebooks en el contenedor
         if jupyter_sessions:
             for session in jupyter_sessions:
+
+                notebook_name = session.get("notebook_name", "")[:20]
+
                 row = [
                     container_name,
-                    container_id,
                     port,
                     token,
                     cpu_usage,
@@ -75,7 +75,7 @@ def display_stats(data):
                     mem_perc,
                     net_io,
                     block_io,
-                    session.get("notebook_name", ""),
+                    notebook_name,
                     session.get("pid", ""),
                     "",  # GPU ID
                     "",  # GPU Memory Used
@@ -86,10 +86,10 @@ def display_stats(data):
                 # Agregar información de GPU si está disponible
                 for gpu in gpu_info:
                     if gpu["docker_container_running_gpu_pid"] == session["pid"]:
-                        row[11] = gpu["docker_container_used_gpu_id"]
-                        row[12] = gpu["docker_container_gpu_memory_used_MiB"]
-                        row[13] = gpu["docker_container_total_gpu_used_MiB"]
-                        row[14] = gpu["porcentaje_total_gpu_percent_ram_used"]
+                        row[10] = gpu["docker_container_used_gpu_id"]
+                        row[11] = gpu["docker_container_gpu_memory_used_MiB"]
+                        row[12] = gpu["docker_container_total_gpu_used_MiB"]
+                        row[13] = gpu["porcentaje_total_gpu_percent_ram_used"]
 
                 table.add_row(row)
 
@@ -97,7 +97,6 @@ def display_stats(data):
         elif gpu_info:
             row = [
                 container_name,
-                container_id,
                 port,
                 token,
                 cpu_usage,
@@ -118,7 +117,6 @@ def display_stats(data):
         else:
             row = [
                 container_name,
-                container_id,
                 port,
                 token,
                 cpu_usage,
