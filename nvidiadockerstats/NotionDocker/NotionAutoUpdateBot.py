@@ -5,6 +5,7 @@ from pprint import pprint
 import os
 from notion_client import Client
 from dotenv import load_dotenv
+from discord_implementation import send_discord_message
 
 load_dotenv(".env")
 Notion_Token: str = os.getenv("Notion_Token")
@@ -271,6 +272,11 @@ def calcular_consumo_gpu_unico(file):
             if clave_unica not in procesos_vistos:
                 procesos_vistos.add(clave_unica)
                 total_gpu_percent += gpu_percent_used
+
+        if total_gpu_percent < 80 and total_gpu_percent > 50:  
+            send_discord_message(f"Alerta <@&1264331652398841973>, el contenedor {container_name} ha sobrepasado el 50% de uso en GPU")
+        if total_gpu_percent >= 80:  
+            send_discord_message(f"ALERTA <@&1264331652398841973>, EL CONTENEDOR {container_name} ESTA HACIENDO USO EXCESIVO DE GPU, REVISION INMEDIATA NECESARIA")
         resultados.append(
             {
                 "container_id": container_id,
