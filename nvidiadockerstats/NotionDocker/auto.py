@@ -136,8 +136,11 @@ def main_loop():
             elif action == "restart":
                 print("Restarted")
                 c_info.page_id = search_page(c_info.Name_Container, host)
-                token_update(jtoken, c_info.page_id)
-                port_update(c_info.Port, c_info.page_id)
+                try:
+                    token_update(jtoken, c_info.page_id)
+                    port_update(c_info.Port, c_info.page_id)
+                except:
+                    create_page(c_info)
 
             elif action == "die":
                 print("Container died, info guardada en caché.")
@@ -150,6 +153,7 @@ def main_loop():
 
         except Exception as e:
             print(f"⚠️ Error en acción {action}: {e}")
+            raise RuntimeError(f"Error enviando a Notion: {e}")
             continue
 
 def main():
