@@ -37,10 +37,22 @@ def get_container_stats(container_name):
         if len(stats) == 5:
             return stats
         else:
-            return ["Unknown CPU", "Unknown MEM USAGE / LIMIT", "Unknown MEM %", "Unknown NET I/O", "Unknown BLOCK I/O"]
+            return [
+                "Unknown CPU",
+                "Unknown MEM USAGE / LIMIT",
+                "Unknown MEM %",
+                "Unknown NET I/O",
+                "Unknown BLOCK I/O",
+            ]
     except subprocess.CalledProcessError as e:
         print(f"Error getting stats for container {container_name}: {e}")
-        return ["Unknown CPU", "Unknown MEM USAGE / LIMIT", "Unknown MEM %", "Unknown NET I/O", "Unknown BLOCK I/O"]
+        return [
+            "Unknown CPU",
+            "Unknown MEM USAGE / LIMIT",
+            "Unknown MEM %",
+            "Unknown NET I/O",
+            "Unknown BLOCK I/O",
+        ]
 
 
 def get_container_id(container_name):
@@ -288,6 +300,10 @@ def process_container(container, gpu_data, total_gpu_memory):
         server_url = f"http://127.0.0.1:{port}"
         jupyter_sessions = get_jupyter_sessions(server_url, tokens)
         for session in jupyter_sessions:
+            try:
+                print(session["kernel"])
+            except:
+                continue
             kernel_id = session["kernel"]["id"]
             notebook_name = session["notebook"]["name"]
             pid = get_pid_for_kernel(kernel_id)
